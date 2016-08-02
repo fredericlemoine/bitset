@@ -410,6 +410,28 @@ func TestEqual(t *testing.T) {
 		t.Error("Two sets with the same bits set should be equal")
 	}
 }
+func TestEqualOrComplement(t *testing.T) {
+	a := New(101)
+	b := New(100)
+	c := New(101)
+	var i uint
+
+	if c.EqualOrComplement(b) {
+		t.Error("Sets of different sizes should be not be equal")
+	}
+
+	for i = 0; i < 101; i++ {
+		if i%2 == 0 {
+			a.Set(i)
+		} else {
+			c.Set(i)
+		}
+	}
+
+	if !a.EqualOrComplement(c) {
+		t.Error("Two sets with the complementary bits set should be equal or complement")
+	}
+}
 
 func TestUnion(t *testing.T) {
 	a := New(100)
