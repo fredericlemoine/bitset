@@ -282,6 +282,51 @@ func (b *BitSet) Equal(c *BitSet) bool {
 	return true
 }
 
+// EqualOrComplement tests the equality or the complementarity of two BitSets
+// It should equivalent of doing b.Equal(c) || b.Equal(c.Complement())
+// But way faster because no initialization of a new bitset
+// False if they are of different sizes, otherwise true
+// only if all the bits are complement
+func (b *BitSet) EqualOrComplement(c *BitSet) bool {
+
+	return b.Equal(c) || b.ComplementTest(c)
+}
+
+// ComplementTest tests the complementarity of two BitSets
+// It should equivalent of doing b.Equal(c.Complement())
+// But way far faster because no initialization of a new bitset
+// False if they are of different sizes, otherwise true
+// only if all the bits are complement
+func (b *BitSet) ComplementTest(c *BitSet) bool {
+
+	if c == nil {
+		return false
+	}
+
+	if b.length != c.length {
+		return false
+	}
+	if b.length == 0 { // if they have both length == 0, then could have nil set
+		return true
+	}
+	lastword := wordsNeeded(b.length) - 1
+	even := b.isEven()
+	const allBits uint64 = 0xffffffffffffffff
+	toapply := allBits >> (wordSize - b.length%wordSize)
+	for p, v := range b.set {
+		v = ^v
+		if p == lastword && !even {
+			// Mask for cleaning last word
+			v &= toapply
+		}
+
+		if c.set[p] != v {
+			return false
+		}
+	}
+	return true
+}
+
 func panicIfNull(b *BitSet) {
 	if b == nil {
 		panic(Error("BitSet must not be null"))
