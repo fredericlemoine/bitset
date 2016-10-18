@@ -112,7 +112,7 @@ func (em *BitSetIndex) AddCount(b *BitSet) {
 // Adds the Bitset in the map, with given value
 // If the bitset already exists in the index
 // The old value is erased
-func (em *BitSetIndex) PutEdgeValue(b *BitSet, value int) {
+func (em *BitSetIndex) PutValue(b *BitSet, value int) {
 	index := indexFor(hashCode(b), em.capacity)
 	em.Lock()
 	defer em.Unlock()
