@@ -20,12 +20,14 @@ func TestBitSetIndex(t *testing.T) {
 		}
 	}
 
-	for _, b := range sets {
-		index.AddCount(b)
+	for i := 2; i < 10; i++ {
+		for _, b := range sets {
+			index.AddCount(b)
 
-		val, ok := index.Value(b)
-		if val != 2 || !ok {
-			t.Error(fmt.Sprintf("BitSet value must be == 2 and is %d", val))
+			val, ok := index.Value(b)
+			if val != i || !ok {
+				t.Error(fmt.Sprintf("BitSet value must be == %d and is %d", i, val))
+			}
 		}
 	}
 }
