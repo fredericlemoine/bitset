@@ -5,6 +5,19 @@ import (
 	"testing"
 )
 
+type IntValue struct {
+	val int
+}
+
+func addCount(b *BitSet, bi *BitSetIndex) {
+	val, ok := bi.Value(b)
+	if !ok {
+		bi.PutValue(b, &IntValue{1})
+	} else {
+		(val.(*IntValue)).val += 1
+	}
+}
+
 func TestBitSetIndex(t *testing.T) {
 	index := NewBitSetIndex(128, .75)
 	sets := make([]*BitSet, 0, 100)
@@ -12,20 +25,18 @@ func TestBitSetIndex(t *testing.T) {
 		b := New(100)
 		b.Set(uint(i))
 		sets = append(sets, b)
-		index.AddCount(b)
-
+		addCount(b, index)
 		val, ok := index.Value(b)
-		if val != 1 || !ok {
+		if val.(*IntValue).val != 1 || !ok {
 			t.Error(fmt.Sprintf("BitSet value must be == 1 and is %d", val))
 		}
 	}
 
 	for i := 2; i < 10; i++ {
 		for _, b := range sets {
-			index.AddCount(b)
-
+			addCount(b, index)
 			val, ok := index.Value(b)
-			if val != i || !ok {
+			if val.(*IntValue).val != i || !ok {
 				t.Error(fmt.Sprintf("BitSet value must be == %d and is %d", i, val))
 			}
 		}
@@ -37,10 +48,11 @@ func TestKeys(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		b := New(100)
 		b.Set(uint(i))
-		index.AddCount(b)
+
+		addCount(b, index)
 
 		val, ok := index.Value(b)
-		if val != 1 || !ok {
+		if val.(*IntValue).val != 1 || !ok {
 			t.Error(fmt.Sprintf("BitSet value must be == 1 and is %d", val))
 		}
 	}
@@ -53,10 +65,10 @@ func TestKeys(t *testing.T) {
 
 	for i := 2; i < 10; i++ {
 		for _, b := range keys {
-			index.AddCount(b)
+			addCount(b, index)
 
 			val, ok := index.Value(b)
-			if val != i || !ok {
+			if val.(*IntValue).val != i || !ok {
 				t.Error(fmt.Sprintf("BitSet value must be == %d and is %d", i, val))
 			}
 		}
