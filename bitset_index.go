@@ -14,8 +14,8 @@ type BitSetIndex struct {
 
 type Bucket []*KeyValue
 type KeyValue struct {
-	key   *BitSet
-	value int
+	Key   *BitSet
+	Value interface{}
 }
 
 // HashCode for an edge.
@@ -70,49 +70,25 @@ func NewBitSetIndex(size int64, loadfactor float64) *BitSetIndex {
 // Returns the count for the given Edge
 // If the edge is not present, returns 0 and false
 // If the edge is present, returns the value and true
-func (em *BitSetIndex) Value(b *BitSet) (int, bool) {
+func (em *BitSetIndex) Value(b *BitSet) (interface{}, bool) {
 	index := indexFor(hashCode(b), em.capacity)
 	em.RLock()
 	defer em.RUnlock()
 
 	if em.mapArray[index] != nil {
 		for _, kv := range em.mapArray[index] {
-			if equals(kv.key, b) {
-				return kv.value, true
+			if equals(kv.Key, b) {
+				return kv.Value, true
 			}
 		}
 	}
-	return 0, false
-}
-
-// Increment edge count for a bitset if it already exists in the map
-// Otherwise adds it with count 1
-func (em *BitSetIndex) AddCount(b *BitSet) {
-	index := indexFor(hashCode(b), em.capacity)
-	em.Lock()
-	defer em.Unlock()
-
-	if em.mapArray[index] == nil {
-		em.mapArray[index] = make(Bucket, 1, 5)
-		em.mapArray[index][0] = &KeyValue{b, 1}
-		em.total++
-	} else {
-		for _, kv := range em.mapArray[index] {
-			if equals(kv.key, b) {
-				kv.value++
-				return
-			}
-		}
-		em.mapArray[index] = append(em.mapArray[index], &KeyValue{b, 1})
-		em.total++
-	}
-	em.rehash()
+	return nil, false
 }
 
 // Adds the Bitset in the map, with given value
 // If the bitset already exists in the index
 // The old value is erased
-func (em *BitSetIndex) PutValue(b *BitSet, value int) {
+func (em *BitSetIndex) PutValue(b *BitSet, value interface{}) {
 	index := indexFor(hashCode(b), em.capacity)
 	em.Lock()
 	defer em.Unlock()
@@ -123,8 +99,8 @@ func (em *BitSetIndex) PutValue(b *BitSet, value int) {
 		em.total++
 	} else {
 		for _, kv := range em.mapArray[index] {
-			if equals(kv.key, b) {
-				kv.value = value
+			if equals(kv.Key, b) {
+				kv.Value = value
 				return
 			}
 		}
@@ -147,7 +123,7 @@ func (em *BitSetIndex) rehash() {
 		for _, b := range em.mapArray {
 			if b != nil {
 				for _, kv := range b {
-					index := indexFor(hashCode(kv.key), newcapacity)
+					index := indexFor(hashCode(kv.Key), newcapacity)
 					if newmap[index] == nil {
 						newmap[index] = make(Bucket, 1, 5)
 						newmap[index][0] = kv
@@ -160,4 +136,33 @@ func (em *BitSetIndex) rehash() {
 		em.capacity = newcapacity
 		em.mapArray = newmap
 	}
+}
+
+/* Returns all keys of the index */
+func (em *BitSetIndex) Keys() []*BitSet {
+	keys := make([]*BitSet, em.total)
+	total := 0
+	for _, b := range em.mapArray {
+		if b != nil {
+			for _, kv := range b {
+				keys[total] = kv.Key
+				total++
+			}
+		}
+	}
+	return keys
+}
+
+func (em *BitSetIndex) KeyValues() []*KeyValue {
+	keyvalues := make([]*KeyValue, em.total)
+	total := 0
+	for _, b := range em.mapArray {
+		if b != nil {
+			for _, kv := range b {
+				keyvalues[total] = kv
+				total++
+			}
+		}
+	}
+	return keyvalues
 }
