@@ -356,7 +356,7 @@ func (b *BitSet) ComplementTest(c *BitSet) bool {
 		return true
 	}
 	lastword := wordsNeeded(b.length) - 1
-	even := b.isEven()
+	even := b.isLenExactMultiple()
 	const allBits uint64 = 0xffffffffffffffff
 	toapply := allBits >> (wordSize - b.length%wordSize)
 	for p, v := range b.set {
